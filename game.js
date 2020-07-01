@@ -1,58 +1,45 @@
-const snake = document.querySelector(".snake");
-let food = document.querySelector(".food")
-let moveBy = 25;
-let direction = "right";
+import { update as updateSnake, draw as drawSnake, SNAKE_SPEED, getSnakeHead, snakeIntersection } from './snake.js'
+import { update as updateFood, draw as drawFood } from './food.js'
+import { outsideGrid } from './grid.js'
 
+let lastRenderTime = 0
+let gameOver = false
+const gameBoard = document.getElementById('game-board')
 
-
-
-snake.style.position = "absolute";
-snake.style.left = 0;
-snake.style.top = 0;
-
-// Food 
-
-food.style.position = "absolute";
-food.style.left = "50px";
-food.style.top = "100px";
-
-window.addEventListener("keyup", (e) => {
-  switch (e.key) {
-    case "ArrowLeft":
-      direction = "left";
-      break;
-    case "ArrowRight":
-      direction = "right";
-      break;
-    case "ArrowUp":
-      direction = "up";
-      break;
-    case "ArrowDown":
-      direction = "down";
-      break;
+function main(currentTime) {
+  if (gameOver) {
+    if (confirm('You lost. Press ok to restart.')) {
+      window.location = '/'
+    }
+    return
   }
-});
 
-// Snake Speed
-setInterval(() => {
-  switch (direction) {
-    case "left":
-      snake.style.left = parseInt(snake.style.left) - moveBy + "px";
-      break;
-    case "right":
-      snake.style.left = parseInt(snake.style.left) + moveBy + "px";
-      break;
-    case "up":
-      snake.style.top = parseInt(snake.style.top) - moveBy + "px";
-      break;
-    case "down":
-      snake.style.top = parseInt(snake.style.top) + moveBy + "px";
-      break;
-  }
-  // snake.style.top = parseInt(snake.style.top) + moveBy + "px";
-  if (snake.style.left === food.style.left && snake.style.top === food.style.top) {
-    onClick = document.querySelector(".food").style.display = "none"
-  };
 
-  console.log(direction)
-}, 300);
+  window.requestAnimationFrame(main)
+  const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000
+  if (secondsSinceLastRender < 1 / SNAKE_SPEED) return
+
+
+  lastRenderTime = currentTime
+
+  update()
+  draw()
+}
+
+window.requestAnimationFrame(main)
+
+function update() {
+  updateSnake()
+  updateFood()
+  checkDeath()
+}
+
+function draw() {
+  gameBoard.innerHTML = ''
+  drawSnake(gameBoard)
+  drawFood(gameBoard)
+}
+
+function checkDeath() {
+  gameOver = outsideGrid(getSnakeHead()) || snakeIntersection()
+}
